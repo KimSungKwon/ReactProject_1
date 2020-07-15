@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Link } from 'react-router-dom';
-import Responsive from './Responsive';
+
+// 헤더 컴포넌트 (로고, 로그인, 회원가입)
 
 const HeaderBlock = styled.div`
     position: fixed;
@@ -43,29 +44,23 @@ const StyledLink = styled(Link)`
     color: white;
 `;
 
-const Wrapper = styled(Responsive)`
-
-`;
-
 const Header = () => {
     const [inverted, setInverted] = useState(false);
 
-    
     useEffect (() => {
         const onScroll = () => {
             let currentScroll = window.scrollY;
-            if (currentScroll != 0)
+            if (currentScroll !== 0)
                 setInverted(true);
             else 
                 setInverted(false);
         };
-        
+
         window.addEventListener("scroll", onScroll);
         return () => window.removeEventListener("scroll", onScroll);
     }, [inverted])
     
-    return (
-        
+    return (    
         <HeaderBlock inverted={inverted}>
             <StyledLink to="/" style={{ marginLeft: 25 }}>MYBLOG</StyledLink>
             <div className="header-menu">

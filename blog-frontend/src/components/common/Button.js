@@ -11,9 +11,9 @@ const ButtonBlock = styled.button`
     outline: none;
     cursor: pointer;
 
-    background: rgba(23, 123, 12, 0.7);
+    background: #7b7bbd;
     &:hover {
-        background: rgba(23, 123, 12, 0.5);
+        background: #8b8bc5;
     }
     
     ${props => 

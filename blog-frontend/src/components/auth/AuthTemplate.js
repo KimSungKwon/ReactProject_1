@@ -16,19 +16,25 @@ const AuthTemplateBlock = styled.div`
     justify-content: center;
     align-items: center;
     background-image: url(${bg_main});
+
+`;
+
+const StyledLink = styled(Link)`
+    font-size: 60px;
+    font-weight: bold;
+    color: #7b7bbd;
+    margin-bottom: 9rem;
+    text-decoration: none;
 `;
 
 const WhiteBox = styled.div`
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
-    padding: 2rem;
     width: 360px;
-    
-
 `;
 
 const AuthTemplate = ({ children }) => {
     return (
         <AuthTemplateBlock>
+            <StyledLink to="/">TEMP NAME</StyledLink>
             <WhiteBox>
                 {children}
             </WhiteBox>
