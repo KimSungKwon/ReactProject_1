@@ -1,11 +1,11 @@
 require('dotenv').config();
 
-const Koa = require('koa');
-const Router = require('koa-router');
-const bodyParser = require('koa-bodyparser');
-const mongoose = require('mongoose');
+import Koa from 'koa';
+import Router from 'koa-router';
+import bodyParser from 'koa-bodyparser';
+import mongoose from 'mongoose';
 
-const api = require('./api');
+import api from './api';
 
 const { PORT, MONGO_URI } = process.env;   // .env의 내부값에 대한 레퍼런스 만들기
 

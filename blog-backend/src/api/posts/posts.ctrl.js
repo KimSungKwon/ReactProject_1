@@ -1,103 +1,135 @@
-let postId = 1; // id의 초기값
+import Post from '../../models/post';
+import mongoose from 'mongoose';
+import Joi from '@hapi/joi';
 
-const posts = [
-    {
-        id: 1,
-        title: '제목',
-        body: '내용',
-    },
-];
+const { ObjectId } = mongoose.Types;
 
-/*  Write Post
-    POST /api/posts
-    { title, body }
-*/
-export const write = ctx => {
-    const { title, body } = ctx.request.body;
-    postId += 1;
-    const post = { id: postId, title, body };
-    posts.push(post);
-    ctx.body = post;
+// Middleware that check "/:id"  is valid?
+export const checkObjectId = ( ctx, next ) => {
+    const { id } = ctx.params;
+    if (!ObjectId.isValid(id)) {
+        ctx.status = 404;
+        return;
+    }
+    return next();
 };
 
-/*  Read PostList
+/*  Write Post
+
+    POST /api/posts
+    { 
+        title: 'title', 
+        body: 'contents',
+        tags: ['tag1', 'tag2']
+    }
+*/
+export const write = async ctx => {
+    const schema = Joi.object().keys({
+        title: Joi.string().required(),
+        body: Joi.string().required(),
+        tags: Joi.array().items(Joi.string()),
+    });
+
+    const result = schema.validate(ctx.request.body);
+    if (result.error) {
+        ctx.status = 400;
+        ctx.body = result.error;
+        return;
+    }
+
+    const { title, body, tags } = ctx.request.body;
+    const post = new Post({
+        title,
+        body,
+        tags,
+    });
+    try {
+        await post.save();  // save 'post instance' to DB
+        ctx.body = post;
+    } catch (e) {
+        ctx.throw(500, e);
+    }
+};
+
+/*  Read Post List
+
     GET /api/posts
 */
-export const list = ctx => {
-    ctx.body = posts;
+export const list = async ctx => {
+    try {
+        const posts = await Post.find().exec(); // Request Query to server 
+        ctx.body = posts;
+    } catch (e) {
+        ctx.throw(500, e);
+    }
 };
 
 /*  Read Post
+
     GET /api/posts/:id
 */
-export const read = ctx => {
+export const read = async ctx => {
     const { id } = ctx.params;  // /posts/:id
-    const post = posts.find(p => p.id.toString() === id);   // "ctx.params" returns string. 
-    if (!post) {
-        ctx.status = 404;
-        ctx.body = {
-            message: 'Post is not exist',
-        };
-        return;
+    try { 
+        const post = await Post.findById(id).exec()    
+        if (!post) {
+            ctx.status = 404;
+            return;
+        }
+        ctx.body = post;
+    } catch (e) {
+        ctx.throw(500, e);
     }
-    ctx.body = post;
 };
 
 /*  Remove Post
+
     DELETE /api/posts/:id
 */
-export const remove = ctx => {
+export const remove = async ctx => {
     const { id } = ctx.params;
-    const index = posts.findIndex(p => p.id.toString() === id);
-    if (index === -1) {
-        ctx.status = 404;
-        ctx.body = {
-            message: 'Post is not exist',
-        };
-        return;
+    try {
+        await Post.findByIdAndDelete(id).exec();
+        ctx.status = 204;   // No Content
+    } catch (e) {
+        ctx.throw(500, e);
     }
-    posts.splice(index, 1); // index번쨰부터 한개를 제거
-    ctx.status = 204;   // No Content
-};
-
-/*  Replace Post
-    PUT /api/posts/:id
-    { title, body }
-*/
-export const replace = ctx => {
-    const { id } = ctx.params;
-    const index = posts.findIndex(p => p.id.toString() === id);
-    if (index === -1) {
-        ctx.status = 404;
-        ctx.body = {
-            message: 'Post is not exist',
-        };
-        return;
-    }
-    posts[index] = {
-        id,
-        ...ctx.request.body,
-    };
-    ctx.body = posts[index];
 };
 
 /*  Update Post (Only specific field)
+
     PATCH /api/posts/:id
-    { title, body }
+    { 
+        title: 'title', 
+        body: 'contents',
+        tags: ['tag1', 'tag2']
+    }
 */
-export const update = ctx => {
+export const update = async ctx => {
     const { id } = ctx.params;
-    const index = posts.findIndex(p => p.id.toString() === id);
-    if (index === -1) {
-        ctx.status = 404;
-        ctx.body = {
-            message: 'Post is not exist',
-        };
+    
+    const schema = Joi.object().keys({
+        title: Joi.string(),
+        body: Joi.string(),
+        tags: Joi.array().items(Joi.string()),
+    });
+
+    const result = schema.validate(ctx.request.body)
+    if (result.error) {
+        ctx.status = 400;
         return;
     }
-    posts[index] = {
-        ...posts[index],
-        ...ctx.request.body,
-    };
-    ctx.body = posts[index];
+
+    try {
+        const post = await Post.findByIdAndUpdate(id, ctx.request.body, {
+            new: true   // return UPDATED data
+        }).exec();
+        if (!post) {
+            ctx.status = 404;
+            return;
+        }
+        ctx.body = post;
+    } catch (e) {
+        ctx.throw(500, e);
+    }
 };
